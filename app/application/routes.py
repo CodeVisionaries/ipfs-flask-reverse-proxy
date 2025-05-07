@@ -41,11 +41,15 @@ def is_allowed_json(objstr):
         json_dict = json.loads(objstr)
     except:
         return False
-    if is_json_endf(json_dict):
-        return True
     if is_json_graph_node(json_dict):
         return True
     if is_ext_json_patch(json_dict):
+        return True
+    # is_json_endf comes last because it
+    # modifies the json_dict so it can be
+    # understood by endf_parserpy (keys containing
+    # integers are converted to datatype integer)
+    if is_json_endf(json_dict):
         return True
     return False
 
