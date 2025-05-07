@@ -87,25 +87,48 @@ def is_valid_file_content(file_content):
     return False
 
 
-@app.route('/ipfs/upload', methods=['POST'])
-def upload_file():
+def get_upload_file(request):
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
-    upload_file = request.files['file']
-    filename = secure_filename(upload_file.filename)
-    files = {'file': (filename, upload_file.stream, 'application/octet-stream')} 
-    # add to IPFS
+        return None, {'error': 'No file part'}, 400
+    return request.files['file'], {}, 200
+
+
+def is_valid_file(upload_file):
     file_content = upload_file.read().decode('utf-8')
     upload_file.seek(0)
     if is_valid_file_content(file_content):
         pass
     else:
-        return jsonify({'error': 'Invalid file (must be ENDF, ENDF-JSON or a JSON file with JsonGraphNode or ExtJsonPatch structure'}), 500
-    # if successful do, add to ipfs
+        return None, {'error': 'Invalid file (must be ENDF, ENDF-JSON or a JSON file with JsonGraphNode or ExtJsonPatch structure'}, 403
+    return None, {}, 200
+
+
+def invoke_ipfs_add(upload_file, params):
+    filename = secure_filename(upload_file.filename)
+    files = {'file': (filename, upload_file.stream, 'application/octet-stream')}
     try:
-        response = requests.post(IPFS_URL, files=files)
+        response = requests.post(IPFS_URL, files=files, params=params)
         response.raise_for_status()
         ipfs_hash = response.json()['Hash']
-        return jsonify({'message': 'File uploaded successfully to IPFS', 'ipfs_hash': ipfs_hash}), 200
+        return ipfs_hash, {}, 200
     except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
+        return None, jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
+
+
+def ipfs_add_relay(request, params):
+    upload_file, message, status_code = get_upload_file(request)
+    if status_code != 200:
+        return jsonify(message), status_code
+    _, message, status_code = is_valid_file(upload_file)
+    if status_code != 200:
+        return jsonify(message), status_code
+    # if successful do, add to ipfs
+    ipfs_hash, message, status_coe = invoke_ipfs_add(upload_file, params)
+    if status_code != 200:
+        return jsonify(message), status_code
+    return jsonify({'message': 'File uploaded successfully to IPFS', 'content_identifier': ipfs_hash}), 200
+
+
+@app.route('/ipfs/upload', methods=['POST'])
+def upload_file():
+    return ipfs_add_relay(request, {})

@@ -65,7 +65,7 @@ If the upload is successful, the [content id](https://docs.ipfs.tech/concepts/co
 and status message will be returned, e.g.
 ```
 { 
-  "ipfs_hash": "QmP8cib1GZAtCPfJkNf9RTj13LLpWtdrprcpoqHeAjNnJJ",
+  "content_identifier": "QmP8cib1GZAtCPfJkNf9RTj13LLpWtdrprcpoqHeAjNnJJ",
   "message": "File uploaded successfully to IPFS"
 }
 ```
