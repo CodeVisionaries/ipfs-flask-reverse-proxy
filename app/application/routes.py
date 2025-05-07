@@ -67,6 +67,14 @@ def is_endf(objstr):
         return False
 
 
+def is_valid_file_content(file_content):
+    if is_allowed_json(file_content):
+        return True
+    if is_endf(file_content):
+        return True
+    return False
+
+
 @app.route('/ipfs/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -77,9 +85,7 @@ def upload_file():
     # add to IPFS
     file_content = upload_file.read().decode('utf-8')
     upload_file.seek(0)
-    if is_allowed_json(file_content):
-        pass
-    elif is_endf(file_content):
+    if is_valid_file_content(file_content):
         pass
     else:
         return jsonify({'error': 'Invalid file (must be ENDF, ENDF-JSON or a JSON file with JsonGraphNode or ExtJsonPatch structure'}), 500
