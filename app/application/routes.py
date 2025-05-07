@@ -29,11 +29,23 @@ def is_ext_json_patch(json_dict):
 def is_json_endf(json_dict):
     try:
         sanitize_fieldname_types(json_dict)
-        parser = EndfParserCpp()
+    except:
+        return False
+    # trying both varities of JSON format,
+    # see https://endf-parserpy.readthedocs.io/en/stable/guide/arrays_as_list.html
+    try:
+        parser = EndfParserCpp(array_type='dict')
         parser.write(json_dict)
         return True
     except:
-        return False
+        pass
+    try:
+        parser = EndfParserCpp(array_type='list')
+        parser.write(json_dict)
+        return True
+    except:
+        pass
+    return False
 
 
 def is_allowed_json(objstr):
