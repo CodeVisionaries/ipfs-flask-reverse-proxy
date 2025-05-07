@@ -123,7 +123,7 @@ def ipfs_add_relay(request, params, custom_message):
     if status_code != 200:
         return jsonify(message), status_code
     # if successful do, add to ipfs
-    ipfs_hash, message, status_coe = invoke_ipfs_add(upload_file, params)
+    ipfs_hash, message, status_code = invoke_ipfs_add(upload_file, params)
     if status_code != 200:
         return jsonify(message), status_code
     return jsonify({'content_identifier': ipfs_hash, 'message': custom_message}), 200
