@@ -115,7 +115,7 @@ def invoke_ipfs_add(upload_file, params):
         return None, jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
 
 
-def ipfs_add_relay(request, params):
+def ipfs_add_relay(request, params, custom_message):
     upload_file, message, status_code = get_upload_file(request)
     if status_code != 200:
         return jsonify(message), status_code
@@ -126,9 +126,15 @@ def ipfs_add_relay(request, params):
     ipfs_hash, message, status_coe = invoke_ipfs_add(upload_file, params)
     if status_code != 200:
         return jsonify(message), status_code
-    return jsonify({'message': 'File uploaded successfully to IPFS', 'content_identifier': ipfs_hash}), 200
+    return jsonify({'content_identifier': ipfs_hash, 'message': custom_message}), 200
 
 
 @app.route('/ipfs/upload', methods=['POST'])
 def upload_file():
-    return ipfs_add_relay(request, {})
+    custom_message = 'File uploaded successfully to IPFS'
+    return ipfs_add_relay(request, {}, custom_message)
+
+@app.route('/ipfs/get-content-identifier', methods=['POST'])
+def get_content_identifier():
+    custom_message = 'Content Identifier (CID) successfully computed'
+    return ipfs_add_relay(request, {'only-hash': True}, custom_message)
