@@ -64,8 +64,9 @@ curl -X POST -F "file=@/path/to/file" http://127.0.0.1:5000/ipfs-api-relay/v0/ad
 If the upload is successful, the [content id](https://docs.ipfs.tech/concepts/content-addressing/) (CID)
 and status message will be returned, e.g.
 ```
-{ 
-  "content_identifier": "QmP8cib1GZAtCPfJkNf9RTj13LLpWtdrprcpoqHeAjNnJJ",
-  "message": "File uploaded successfully to IPFS"
+{
+    "Name":"n_2625_26-Fe-54.json",
+    "Hash":"QmdQuzmstKuhxyoDPGcEUeouJxdeNfjNCwCBJDE7dTjsix",
+    "Size":"43042661"
 }
 ```
