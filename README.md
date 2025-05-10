@@ -28,11 +28,11 @@ This flask application uses the Kubo RPC API so you need to
 
 ```
 git clone https://github.com/CodeVisionaries/ipfs-flask-reverse-proxy
-git clone https://github.com/CodeVisionaries/jsontools
+git clone https://github.com/CodeVisionaries/jsonvc
 python -m venv venv
 source venv/bin/activate
 pip install flask requests endf_parserpy 
-pip install ./jsontools
+pip install ./jsonvc
 pip install ./ipfs-flask-reverse-proxy
 ```
 
