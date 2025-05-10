@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 import requests
 import json
 from endf_parserpy import EndfParserCpp
-from jsontools.json.models import JsonGraphNode, ExtJsonPatch
+from jsonvc.json.models import JsonGraphNode, ExtJsonPatch
 from endf_parserpy import sanitize_fieldname_types
 
 IPFS_RPC_API_URL = 'http://127.0.0.1:5001/api'
