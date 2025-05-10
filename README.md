@@ -18,7 +18,7 @@ for adding (and pinning) files on the IPFS node if the file is of a certain type
 In this POC, a file is only accepted if it is an ENDF file, an ENDF file in JSON format,
 a [JsonGraphNode](https://github.com/CodeVisionaries/jsontools/blob/d6ebfe8bba889f0c64735cfd3c72ab10f84e7e25/src/jsontools/json/schemas/schema_json_graph_node_base_v0_0_1.json)
 or
-a [JsonExtPatch](https://github.com/CodeVisionaries/jsontools/blob/d6ebfe8bba889f0c64735cfd3c72ab10f84e7e25/src/jsontools/json/schemas/schema_ext_json_patch_base_v0_0_1.json).
+a [ExtJsonPatch](https://github.com/CodeVisionaries/jsontools/blob/d6ebfe8bba889f0c64735cfd3c72ab10f84e7e25/src/jsontools/json/schemas/schema_ext_json_patch_base_v0_0_1.json).
 
 
 ## Installation
