@@ -7,7 +7,7 @@ from endf_parserpy import EndfParserCpp
 from jsontools.json.models import JsonGraphNode, ExtJsonPatch
 from endf_parserpy import sanitize_fieldname_types
 
-IPFS_URL = 'http://127.0.0.1:5001/api/v0/add'
+IPFS_RPC_API_URL = 'http://127.0.0.1:5001/api'
 
 
 def is_json_graph_node(json_dict):
@@ -106,8 +106,9 @@ def is_valid_file(upload_file):
 def invoke_ipfs_add(upload_file, params):
     filename = secure_filename(upload_file.filename)
     files = {'file': (filename, upload_file.stream, 'application/octet-stream')}
+    ipfs_api_add_url = IPFS_RPC_API_URL.rstrip('/') + '/v0/add'
     try:
-        response = requests.post(IPFS_URL, files=files, params=params)
+        response = requests.post(ipfs_api_add_url, files=files, params=params)
         response.raise_for_status()
         ipfs_hash = response.json()['Hash']
         return ipfs_hash, {}, 200
@@ -129,12 +130,12 @@ def ipfs_add_relay(request, params, custom_message):
     return jsonify({'content_identifier': ipfs_hash, 'message': custom_message}), 200
 
 
-@app.route('/ipfs/upload', methods=['POST'])
+@app.route('/ipfs-api-relay/upload', methods=['POST'])
 def upload_file():
     custom_message = 'File uploaded successfully to IPFS'
     return ipfs_add_relay(request, {}, custom_message)
 
-@app.route('/ipfs/get-content-identifier', methods=['POST'])
+@app.route('/ipfs-api-relay/get-content-identifier', methods=['POST'])
 def get_content_identifier():
     custom_message = 'Content Identifier (CID) successfully computed'
     return ipfs_add_relay(request, {'only-hash': True}, custom_message)
