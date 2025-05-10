@@ -1,5 +1,7 @@
 from flask import current_app as app
-from flask import Flask, request, jsonify
+from flask import (
+    Flask, request, jsonify, Response, stream_with_context
+)
 from werkzeug.utils import secure_filename
 import requests
 import json
@@ -87,55 +89,59 @@ def is_valid_file_content(file_content):
     return False
 
 
-def get_upload_file(request):
+def are_files_valid(request):
     if 'file' not in request.files:
-        return None, {'error': 'No file part'}, 400
-    return request.files['file'], {}, 200
+        return jsonify({'error': 'No file part'}), 400
+    for upload_file in request.files.getlist('file'):
+        file_content = upload_file.read().decode('utf-8')
+        upload_file.seek(0)
+        if is_valid_file_content(file_content):
+            pass
+        else:
+            return jsonify({'error': 'Invalid file (must be ENDF, ENDF-JSON or a JSON file with JsonGraphNode or ExtJsonPatch structure'}), 403
+    return jsonify({'message': 'valid file'}), 200
 
 
-def is_valid_file(upload_file):
-    file_content = upload_file.read().decode('utf-8')
-    upload_file.seek(0)
-    if is_valid_file_content(file_content):
-        pass
-    else:
-        return None, {'error': 'Invalid file (must be ENDF, ENDF-JSON or a JSON file with JsonGraphNode or ExtJsonPatch structure'}, 403
-    return None, {}, 200
+def get_ipfs_add_post_args(request):
+    # headers = {key: value for key, value in request.headers if key.lower() != 'host'}
+    params = request.args.to_dict()
+    files = [
+        ('file', (secure_filename(file.filename), file.stream, file.content_type))
+        for file in request.files.getlist('file')
+    ]
+    # return headers, params, files
+    return params, files
 
 
-def invoke_ipfs_add(upload_file, params):
-    filename = secure_filename(upload_file.filename)
-    files = {'file': (filename, upload_file.stream, 'application/octet-stream')}
+def is_permissible_ipfs_add_request(request):
+    params, files = get_ipfs_add_post_args(request)
+    permitted_params = ['only-hash']
+    if not all(k in permitted_params for k in params):
+        return jsonify({'error': 'inadmissible parameters provided'}), 400
+    permitted_file_keys = ['file']
+    if not all(k[0] in permitted_file_keys for k in files):
+        return jsonify({'error': 'inadmissible key(s) found in `files`'}), 400
+    return are_files_valid(request)
+
+
+def invoke_jailed_ipfs_add(request):
+    message, status_code = is_permissible_ipfs_add_request(request)
+    if status_code != 200:
+        return message, status_code
     ipfs_api_add_url = IPFS_RPC_API_URL.rstrip('/') + '/v0/add'
+    params, files = get_ipfs_add_post_args(request)
     try:
-        response = requests.post(ipfs_api_add_url, files=files, params=params)
+        response = requests.post(ipfs_api_add_url, params=params, files=files, stream=True)
         response.raise_for_status()
-        ipfs_hash = response.json()['Hash']
-        return ipfs_hash, {}, 200
+        return Response(
+            stream_with_context(response.iter_content(chunk_size=10*1024)),
+            status=response.status_code,
+            headers=dict(response.headers)
+        )
     except requests.exceptions.RequestException as e:
-        return None, jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
+        return jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
 
 
-def ipfs_add_relay(request, params, custom_message):
-    upload_file, message, status_code = get_upload_file(request)
-    if status_code != 200:
-        return jsonify(message), status_code
-    _, message, status_code = is_valid_file(upload_file)
-    if status_code != 200:
-        return jsonify(message), status_code
-    # if successful do, add to ipfs
-    ipfs_hash, message, status_code = invoke_ipfs_add(upload_file, params)
-    if status_code != 200:
-        return jsonify(message), status_code
-    return jsonify({'content_identifier': ipfs_hash, 'message': custom_message}), 200
-
-
-@app.route('/ipfs-api-relay/upload', methods=['POST'])
-def upload_file():
-    custom_message = 'File uploaded successfully to IPFS'
-    return ipfs_add_relay(request, {}, custom_message)
-
-@app.route('/ipfs-api-relay/get-content-identifier', methods=['POST'])
-def get_content_identifier():
-    custom_message = 'Content Identifier (CID) successfully computed'
-    return ipfs_add_relay(request, {'only-hash': True}, custom_message)
+@app.route('/ipfs-api-relay/v0/add', methods=['POST'])
+def ipfs_api_v0_add():
+    return invoke_jailed_ipfs_add(request)

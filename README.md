@@ -59,7 +59,7 @@ python app/ipfs_gateway.py
 
 Now you can add files of valid type (e.g. ENDF, see above) via
 ```
-curl -X POST -F "file=@/path/to/file" http://127.0.0.1:5000/ipfs/upload
+curl -X POST -F "file=@/path/to/file" http://127.0.0.1:5000/ipfs-api-relay/v0/add
 ```
 If the upload is successful, the [content id](https://docs.ipfs.tech/concepts/content-addressing/) (CID)
 and status message will be returned, e.g.
