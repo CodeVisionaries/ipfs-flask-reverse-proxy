@@ -27,13 +27,13 @@ This flask application uses the Kubo RPC API so you need to
 [install the Kubo IPFS client](https://docs.ipfs.tech/install/command-line/).
 
 ```
-git clone https://github.com/CodeVisionaries/ipfs_flask_reverse_proxy
+git clone https://github.com/CodeVisionaries/ipfs-flask-reverse-proxy
 git clone https://github.com/CodeVisionaries/jsontools
 python -m venv venv
 source venv/bin/activate
 pip install flask requests endf_parserpy 
 pip install ./jsontools
-pip install ./ipfs_flask_reverse_proxy
+pip install ./ipfs-flask-reverse-proxy
 ```
 
 ## Usage
@@ -47,7 +47,7 @@ Start the IPFS Kubo client:
 ipfs daemon
 ```
 
-Switch to another terminal window and change into the `ipfs_flask_reverse_proxy` directory.
+Switch to another terminal window and change into the `ipfs-flask-reverse-proxy` directory.
 Activate the virtual environment:
 ```
 source venv/bin/activate
