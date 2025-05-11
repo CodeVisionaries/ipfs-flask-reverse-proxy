@@ -4,7 +4,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 import requests
-import json
+import orjson
 from endf_parserpy import EndfParserCpp
 from jsonvc.json.models import JsonGraphNode, ExtJsonPatch
 from endf_parserpy import sanitize_fieldname_types
@@ -52,7 +52,7 @@ def is_json_endf(json_dict):
 
 def is_allowed_json(objstr):
     try:
-        json_dict = json.loads(objstr)
+        json_dict = orjson.loads(objstr)
     except:
         return False
     if is_json_graph_node(json_dict):
