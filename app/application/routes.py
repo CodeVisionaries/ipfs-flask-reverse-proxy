@@ -124,6 +124,13 @@ def is_permissible_ipfs_add_request(request):
     return are_files_valid(request)
 
 
+def is_pinned(cid):
+    ipfs_api_pin_url = IPFS_RPC_API_URL.rstrip('/') + f'/v0/pin/ls'
+    params = {'arg': cid}
+    resp = requests.post(ipfs_api_pin_url, params=params)
+    return resp.status_code == 200
+
+
 def invoke_jailed_ipfs_add(request):
     message, status_code = is_permissible_ipfs_add_request(request)
     if status_code != 200:
@@ -142,6 +149,35 @@ def invoke_jailed_ipfs_add(request):
         return jsonify({'error': f'Error uploading to IPFS: {str(e)}'}), 500
 
 
+def invoke_jailed_ipfs_routing_provide(request):
+    ipfs_api_provide_url = IPFS_RPC_API_URL.rstrip('/') + '/v0/routing/provide'
+    params = request.args.to_dict()
+    if 'arg' not in params:
+        return jsonify({'error': '`arg` parameter not provided to routing/provide endpoint'}), 400
+    cid = params['arg']
+    if not is_pinned(cid):
+        return jsonify({'error': f'Not providing {cid} because not pinned on this server'}), 400
+
+    provide_params = {
+        'arg': cid
+    }
+    try:
+        response = requests.post(ipfs_api_provide_url, params=params)
+        response.raise_for_status()
+        return Response(
+            stream_with_context(response.iter_content(chunk_size=10*1024)),
+            status=response.status_code,
+            headers=dict(response.headers)
+        )
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': 'Could not serve routing/provide functionality'})
+
+
 @app.route('/ipfs-api-relay/v0/add', methods=['POST'])
 def ipfs_api_v0_add():
     return invoke_jailed_ipfs_add(request)
+
+
+@app.route('/ipfs-api-relay/v0/routing/provide', methods=['POST'])
+def ipfs_api_v0_routing_provide():
+    return invoke_jailed_ipfs_routing_provide(request)
